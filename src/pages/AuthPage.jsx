@@ -1,6 +1,8 @@
 import { Button, Col, Image, Row, Modal, Form } from "react-bootstrap";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
+import useLocalStorage from "use-local-storage";
+import { useNavigate } from "react-router-dom";
 
 export default function AuthPage() {
   const loginImage = "https://sig1.co/img-twitter-1";
@@ -13,6 +15,15 @@ export default function AuthPage() {
   const handleShowLogin = () => setModalShow("Login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [authToken, setAuthToken] = useLocalStorage("authToken", "");
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (authToken) {
+      navigate("/profile");
+    }
+  }, [authToken, navigate]);
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -27,7 +38,10 @@ export default function AuthPage() {
     e.preventDefault();
     try {
       const res = await axios.post(`${url}/login`, { username, password });
-      console.log(res.data);
+      if (res.data && res.data.auth === true && res.data.token) {
+        setAuthToken(res.data.token); // Save token to localStorage.
+        console.log("Login was successful, token saved");
+      }
     } catch (error) {
       console.error(error);
     }
